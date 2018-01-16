@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>拖拽图片调整大小</title>
+</head>
+<style>
+/*css样式*/
+*{margin:0; padding:0; list-style:none; }
+body{ background:#fff; font:normal 12px/22px 宋体;  }
+img{ border:0;  }
+a{ text-decoration:none; color:#333;  }
+a:hover{ color:#1974A1;  }
+
+.bgMain {
+	width: 829px;
+	height: 600px;
+	position: relative;
+	margin: 100px auto;
+	border: 1px solid #ccc;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+.bgImg {
+	display: block;
+	position: absolute;
+}
+
+.imgList {
+	width: 200px;
+	height: 600px;
+	overflow-y: scroll;
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.imgList li {
+	width: 180px;
+	height: 180px;
+	background-color: #fff;
+	margin-bottom: 10px;
+	overflow: hidden;
+	border-bottom: 1px solid #fff;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+.imgList li img {
+	display: block;
+	width: 180px;
+	height: 180px;
+	margin: 0px auto;
+}
+
+/*.showBox {
+	position: absolute;
+	width: 450px;
+	height: 300px;
+	border: 5px dashed gray;
+	top: 0;
+	left: 100px;
+}*/
+#dragContainer{width:240px;height:130px;position: absolute;top: 0;left: 100px;}
+#drager{width:100%;height:100%;border: 5px dashed gray;}
+#zoom{position: absolute;width:10px;height:10px;background-color: #000000;right:0;bottom: 0;}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery-ui-1.8.2.custom.min.js"></script>
+
+<body>
+<div class="bgMain">
+	<!--背景-->
+	<div class="bgImg"><img  src="images/bg.png" width="829" height="600"></div>
+	<!--<div class="showBox"></div>-->
+	<div id="dragContainer">
+		<div id="drager" class="showBox"></div>
+		<div id="zoom"></div>
+	</div>
+	<!--灯列表-->
+	<ul class="imgList">
+		<li><img src="images/01.png" /></li>
+		<li><img src="images/02.png" /></li>
+		<li><img src="images/03.png" /></li>
+		<li><img src="images/04.png" /></li>
+		<li><img src="images/05.png" /></li>
+		<li><img src="images/06.png" /></li>
+	</ul>
+</div>
+<script type="text/javascript">
+   
+  // 定义全局变量 保存 拖放元素
+  var moveDom ;
+   
+  // 让元素 能够被 拖放的内容 丢进去
+  document.querySelector('.showBox').ondragover = function (e){
+    //防止浏览器默认行为(W3C)
+    e.preventDefault();
+  }
+   
+  // 拖放元素 丢到 容器内 会触发 ondrop事件
+  // 如果没有在 ondragover中 阻止默认行为 那么 无法触发 ondrop事件
+  document.querySelector('.showBox').ondrop = function (){
+    //console.log(moveDom);
+    if(moveDom.src){
+      // 如果 src有值 那么设置src属性
+      // 获取 moveDom的src属性 并赋值给 盒子即可
+    this.style.background = 'url('+moveDom.src+')no-repeat center/cover';
+    }else{
+      // 如果src没有值 那么 设置背景颜色
+//      console.log(moveDom);
+//      console.log(moveDom.style.backgroundColor);
+      // 该方法 返回的内容是 style属性
+      // getComputedStyle 能够获取 style标签中 写的样式
+      console.log(window.getComputedStyle(moveDom).backgroundColor);
+      this.style.backgroundColor = window.getComputedStyle(moveDom).backgroundColor;
+    }
+  }
+   
+  // 当我们开始拖放元素的时候 会触发 ondragstart事件
+  var imgs = document.querySelectorAll('img');
+  for (var i=0;i<imgs.length;i++) {
+    imgs[i].ondragstart = function (){
+      moveDom = this;
+    }
+  }
+   
+   
+  // 为div绑定拖拽开始事件
+  var colorBoxs = document.querySelectorAll('.colorBox');
+  for (var i=0;i<colorBoxs.length;i++) {
+    colorBoxs[i].ondragstart = function (){
+      moveDom = this;
+    }
+  }
+</script>
+<script type="text/javascript">
+			(function(window){
+				function Drag(drager,dragContainer)
+				{
+					this.drager=$$(drager);
+					this.dragContainer=$$(dragContainer);
+					this.drager.style.cursor="move";
+					this.DragHandler();
+				}
+				Drag.prototype={
+					DragHandler:function()
+					{
+						var drager=this.drager;
+						var dragContainer=this.dragContainer;
+						drager.onmousedown=function(e)
+						{
+							var e=e||window.event;
+							var oldLeft=dragContainer.offsetLeft;
+							var oldTop=dragContainer.offsetTop;
+							var oldX=e.clientX;
+							var oldY=e.clientY;
+							document.onmousemove=function(e)
+							{
+								var e=e||window.event;
+								var mouseX=e.clientX;
+								var mouseY=e.clientY;
+								var newX=parseInt(mouseX)-parseInt(oldX)+parseInt(oldLeft);
+								var newY=parseInt(mouseY)-parseInt(oldY)+parseInt(oldTop);
+								dragContainer.style.left=newX+"px";
+								dragContainer.style.top=newY+"px";
+							}
+							document.onmouseup=function(e)
+							{
+								document.onmousemove=null;
+								document.onmouseup=null;
+							}
+						}
+					}
+				}
+				function Zoom(drager,dragContainer,zoom)
+				{
+					this.dragContainer=$$(dragContainer);
+					this.defaultWH={"width":this.dragContainer.offsetWidth,"height":this.dragContainer.offsetHeight};
+					var drag=new Drag(drager,dragContainer);
+					this.zoom=$$(zoom);
+					this.zoom.style.cursor="se-resize";
+					this.goMove();
+				}
+				Zoom.prototype={
+					goMove:function()
+					{
+						var dragContainer=this.dragContainer;
+						var defaultWH=this.defaultWH;
+						var zoom=this.zoom;
+						zoom.onmousedown=function(e)
+						{
+							var e=e||window.event;
+							var oldLeft=zoom.offsetLeft;
+							var oldTop=zoom.offsetTop;
+							var oldX=e.clientX;
+							var oldY=e.clientY;
+							document.onmousemove=function(e)
+							{
+								var e=e||window.event;
+								var newX=e.clientX;
+								var newY=e.clientY;
+								var w=newX-oldX+oldLeft+zoom.offsetWidth;
+								var h=newY-oldY+oldTop+zoom.offsetHeight;
+								w=Math.max(w,defaultWH.width);
+								h=Math.max(h,defaultWH.height);
+								dragContainer.style.width=w+"px";
+								dragContainer.style.height=h+"px";
+							}
+							document.onmouseup=function(e)
+							{
+								document.onmousemove=null;
+								document.onmouseup=null;
+							}
+						}
+					}
+				}
+				window.Drag=Drag;
+				window.Zoom=Zoom;
+			})(window)
+
+			new Zoom("drager","dragContainer","zoom");
+
+			function $$(id)
+			{
+				return document.getElementById(id);
+			}
+		</script>
+</body>
+</html>
